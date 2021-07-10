@@ -26,6 +26,14 @@
                 <td class="py-4 px-6 border-b border-grey-light">{{$todo->deadline}}</td>
                 <td class="py-4 px-6 border-b border-grey-light flex justify-center">
                   <!-- 更新ボタン -->
+                  <form action="{{ route('todo.edit',$todo->id) }}" method="GET">
+                    @csrf
+                    <button type="submit" class="mr-2 ml-2 text-sm bg-black hover:bg-gray-900 hover:shadow-none text-white py-1 px-2 focus:outline-none focus:shadow-outline">
+                      <svg class="h-6 w-6 text-gray-500" fill="none" viewBox="0 0 24 24" stroke="white">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                      </svg>
+                    </button>
+                  </form>
                   <!-- 削除ボタン -->
                   <form action="{{ route('todo.destroy',$todo->id) }}" method="POST">
                     @method('delete')

@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use Validator;
 use App\Models\Todo;
+use Auth;
 
 class TodoController extends Controller
 {
@@ -13,10 +14,14 @@ class TodoController extends Controller
      *
      * @return \Illuminate\Http\Response
      */
+    public function __construct()
+    {
+      $this->middleware(['auth']);
+    }
     public function index()
     {
       // モデルに定義した関数を実行する．
-      $todos = Todo::getAllOrderByDeadline();
+      $todos = Todo::getMyAllOrderByDeadline();
       return view('todo.index', [
         'todos' => $todos
       ]);
@@ -43,7 +48,7 @@ class TodoController extends Controller
     {
       // バリデーション
       $validator = Validator::make($request->all(), [
-        'todo' => 'required | max:191',
+        'todo' => 'required | max:255',
         'deadline' => 'required',
       ]);
       // バリデーション:エラー
@@ -53,13 +58,14 @@ class TodoController extends Controller
           ->withInput()
           ->withErrors($validator);
       }
+      // フォームから送信されてきたデータとユーザIDをマージする
+      $data = $request->merge(['user_id' => Auth::user()->id])->all();
       // create()は最初から用意されている関数
       // 戻り値は挿入されたレコードの情報
-      $result = Todo::create($request->all());
+      $result = Todo::create($data);
       // ルーティング「todo.index」にリクエスト送信（一覧ページに移動）
       return redirect()->route('todo.index');
     }
-
 
     /**
      * Display the specified resource.
@@ -81,7 +87,8 @@ class TodoController extends Controller
      */
     public function edit($id)
     {
-        //
+      $todo = Todo::find($id);
+      return view('todo.edit', ['todo' => $todo]);
     }
 
     /**
@@ -93,9 +100,25 @@ class TodoController extends Controller
      */
     public function update(Request $request, $id)
     {
-        //
+      //バリデーション
+      $validator = Validator::make($request->all(), [
+        'todo' => 'required | max:191',
+        'deadline' => 'required',
+      ]);
+      //バリデーション:エラー
+      if ($validator->fails()) {
+        return redirect()
+          ->route('todo.edit', $id)
+          ->withInput()
+          ->withErrors($validator);
+      }
+      //データ更新処理
+      // updateは更新する情報がなくても更新が走る（updated_atが更新される）
+      $result = Todo::find($id)->update($request->all());
+      // fill()save()は更新する情報がない場合は更新が走らない（updated_atが更新されない）
+      // $redult = Todo::find($id)->fill($request->all())->save();
+      return redirect()->route('todo.index');
     }
-
     /**
      * Remove the specified resource from storage.
      *
